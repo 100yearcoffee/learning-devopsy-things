@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synergychat-crawler
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: synergychat-crawler
+  template:
+    metadata:
+      labels:
+        app: synergychat-crawler
+    spec:
+      volumes:
+        - name: cache-volume
+          emptyDir: {}
+      containers:
+        - name: synergychat-crawler-1
+          image: bootdotdev/synergychat-crawler:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: synergychat-crawler-configmap
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /cache
+        - name: synergychat-crawler-2
+          image: bootdotdev/synergychat-crawler:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: CRAWLER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: synergychat-crawler-configmap
+                  key: CRAWLER_PORT_2
+            - name: CRAWLER_KEYWORDS
+              value: "love,hate,joy,sadness,anger,disgust,fear,surprise"
+            - name: CRAWLER_DB_PATH
+              value: "/cache/db"
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /cache
+        - name: synergychat-crawler-3
+          image: bootdotdev/synergychat-crawler:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: CRAWLER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: synergychat-crawler-configmap
+                  key: CRAWLER_PORT_3
+            - name: CRAWLER_KEYWORDS
+              value: "love,hate,joy,sadness,anger,disgust,fear,surprise"
+            - name: CRAWLER_DB_PATH
+              value: "/cache/db"
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /cache
